@@ -1,0 +1,12 @@
+/.idea
+
+# local configuration for network-backed tests
+/tests/NetworkConfig.php
+
+# composer stuff
+/vendor
+/composer.phar
+/composer.lock
+
+# used when generating PEAR package
+/.pear-package/
