@@ -174,7 +174,7 @@ function arnold_init_gateway_class() {
          
 
             // This sample uses the Apache HTTP client from HTTP Components (http://hc.apache.org/httpcomponents-client-ga/)
-            require_once 'HTTP/Request2.php';
+           // require_once 'HTTP/Request2.php';
 
             $request = new Http_Request2('https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay');
             $url = $request->getUrl();
