@@ -48,7 +48,8 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'wc_arnold_gatewa
  * The class itself, please note that it is inside plugins_loaded action hook
  */
 add_action('plugins_loaded', 'arnold_init_gateway_class', 11);
-function arnold_init_gateway_class()
+
+function wc_arnold_gateway_init()
 {
 
     class WC_Arnold_Gateway extends WC_Payment_Gateway
@@ -70,9 +71,11 @@ function arnold_init_gateway_class()
 
             // gateways can support subscriptions, refunds, saved payment methods,
             // but in this tutorial we begin with simple payments
+           /*
             $this->supports = array(
                 'products'
             );
+            */
 
             // Method with all the options fields
             $this->init_form_fields();
@@ -85,7 +88,7 @@ function arnold_init_gateway_class()
             $this->testmode = 'yes' === $this->get_option('testmode');
             $this->private_key = $this->testmode ? $this->get_option('test_private_key') : $this->get_option('private_key');
             $this->publishable_key = $this->testmode ? $this->get_option('test_publishable_key') : $this->get_option('publishable_key');
-            $this->encodedstr = $this->get_option('encodedstr')
+            $this->encodedstr = $this->get_option('encodedstr');
 
             // This action hook saves the settings
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -100,56 +103,56 @@ function arnold_init_gateway_class()
         public function init_form_fields()
         {
 
-            $this->form_fields = array(
+            $this->form_fields = apply_filters('wc_arnold_form_fields', array(
                 'enabled' => array(
-                    'title'       => 'Enable/Disable',
-                    'label'       => 'Enable Namisi Arnold Gateway',
+                    'title'       => __('Enable/Disable', 'wc-arnold-gateway'),
+                    'label'       => __('Enable Namisi Arnold Gateway', 'wc-arnold-gateway'),
                     'type'        => 'checkbox',
                     'description' => '',
                     'default'     => 'no'
                 ),
                 'title' => array(
-                    'title'       => 'Namisi Arnold Paul',
+                    'title'       => __('Title', 'wc-arnold-gateway'),
                     'type'        => 'text',
                     'description' => 'Powered by Namisi Arnold Paul, Supports MTN Mobile Money',
-                    'default'     => 'MTN Mobile Money Number',
+                    'default'     => __('MTN Mobile Money Number','wc-arnold-gateway'),
                     'desc_tip'    => true,
                 ),
                 'description' => array(
-                    'title'       => 'Description',
+                    'title'       => __('Description', 'wc-arnold-gateway'),
                     'type'        => 'textarea',
-                    'description' => 'Powered by Namisi Arnold Paul, Supports MTN Mobile Money.',
-                    'default'     => 'MTN Mobile Money Number.',
+                    'description' => __('Powered by Namisi Arnold Paul, Supports MTN Mobile Money.','wc-arnold-gateway'),
+                    'default'     => __('MTN Mobile Money Number.', 'wc-arnold-gateway'),
                 ),
                 'testmode' => array(
-                    'title'       => 'Test mode',
+                    'title'       => __('Test mode','wc-arnold-gateway'),
                     'label'       => 'Enable Test Mode',
                     'type'        => 'checkbox',
-                    'description' => 'Place the payment gateway in test mode using test API keys.',
+                    'description' => __('Place the gateway in test mode','wc-arnold-gateway'),
                     'default'     => 'yes',
                     'desc_tip'    => true,
                 ),
                 'test_publishable_key' => array(
-                    'title'       => 'Test Publishable Key',
+                    'title'       => __('Test Publishable key','wc-arnold-gateway'),
                     'type'        => 'text'
                 ),
                 'test_private_key' => array(
-                    'title'       => 'Test Private Key',
+                    'title'       => __('Test Private Key','wc-arnold-gateway'),
                     'type'        => 'password',
                 ),
                 'publishable_key' => array(
-                    'title'       => 'Live Publishable Key',
+                    'title'       => __('Live Publishable Key','wc-arnold-gateway'),
                     'type'        => 'text'
                 ),
                 'private_key' => array(
-                    'title'       => 'Live Private Key',
+                    'title'       => __('Live Private Key','wc-arnold-gateway'),
                     'type'        => 'password'
                 ),
                 'encodedstr' => array(
-                    'title'       => 'Your Base 64 Encoded String',
+                    'title'       => __('EncodedStr','wc-arnold-gateway'),
                     'type'        => 'password'
                 )
-            );
+            ));
         }
 
         /**
@@ -233,10 +236,6 @@ function arnold_init_gateway_class()
         {
 
             global $woocommerce;
-
-            // we need it to get any order detailes
-            $order = wc_get_order($order_id);
-
             // commenting out Http_Request2, gonna harness wp_get/remote_post
             // $request = new Http_Request2('https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay');
             // $url = $request->getUrl();
@@ -332,7 +331,7 @@ function arnold_init_gateway_class()
             }
 
             // check on payment
-            $getresponse = wp_remote_get("https://ericssonbasicapi1.azure-api.net/collection/v1_0/requesttopay/" . $randomID, array(
+            $getresponse = wp_remote_get($url2. $randomID, array(
                 "headers" => array(
                     "Ocp-Apim-Subscription-Key" => $subkey,
                     "Authorization" => $auth,
@@ -357,10 +356,10 @@ function arnold_init_gateway_class()
             // Mark as on-hold (we're awaiting the payment)
             $order->update_status('on-hold', __('Awaits payment, refID: ' . $randomID, 'wc-arnold-gateway'));
 
-            //$order->payment_complete();
+            $order->payment_complete();
 
             // Reduce stock levels
-            // $order->reduce_order_stock();
+             $order->reduce_order_stock();
 
             // Remove cart
             WC()->cart->empty_cart();
